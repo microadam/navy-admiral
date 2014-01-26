@@ -1,7 +1,14 @@
 {
   "name": "navy-admiral",
-  "description": "admirald",
+  "description": "Coordinates execution of orders (tasks) across your fleet of Captains (servers). Controlled via the comms CLI.",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:microadam/navy-admiral"
+  },
+  "publishConfig": {
+    "registry": "http://registry.npmjs.org"
+  },
   "bin": {
     "admirald": "./admirald.js"
   },
