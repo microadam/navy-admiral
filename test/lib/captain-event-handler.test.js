@@ -16,17 +16,15 @@ describe('captain-event-handler', function () {
 
     it('should listen to the captainRegister event', function () {
       var spark = new Spark()
-        , mockConnectionHandler = sinon.mock(connectionHandler)
+        , connectionHandlerStub = sinon.stub(connectionHandler, 'addCaptain')
         , mockMessageEmitter = sinon.mock(messageEmitter)
         , handleEvents = createHandleEvents(connectionHandler, messageEmitter)
 
-      mockConnectionHandler.expects('addCaptain').once()
-      mockConnectionHandler.expects('getNumCaptains').once()
+      connectionHandlerStub.callsArgWith(3, null, [])
       mockMessageEmitter.expects('emitMessage').twice()
 
       handleEvents(spark)
       spark.emit('captainRegister', {})
-      mockConnectionHandler.verify()
       mockMessageEmitter.verify()
     })
 

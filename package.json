@@ -27,7 +27,8 @@
     "primus-responder": "~1.0.1",
     "ws": "~0.4.31",
     "async": "~0.2.9",
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "primus-rooms": "~2.3.0"
   },
   "devDependencies": {
     "jshint": "~2.4.1",

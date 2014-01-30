@@ -6,29 +6,32 @@ var sinon = require('sinon')
 
 describe('captain-request-sender', function () {
 
+  function createPrimus(ids, sparks, error) {
+    if (!ids) ids = []
+    if (!sparks) sparks = []
+    return {
+      room: function () { return { clients: function (cb) { cb(error, ids) } } }
+    , forEach: function (cb) { sparks.forEach(cb) }
+    }
+  }
+
   describe('sendListOrdersRequest()', function () {
 
     function createSpark() {
       return {
-        writeAndWait: function (request, callback) {
+        writeAndWait: function (request, cb) {
           var response = { orders: [ 'orderOne', 'orderTwo' ] }
-          callback(response)
+          cb(response)
         }
       }
     }
 
-    var connectionHandler = false
-
-    beforeEach(function () {
-      connectionHandler = createConnectionHandler(logger)
-    })
-
     it('should return a list of captains orders with two captains connected', function (done) {
-      connectionHandler.addCaptain('test', 'one', createSpark())
-      connectionHandler.addCaptain('test', 'two', createSpark())
-
-      var captainRequestSender =
-        createCaptainRequestSender(connectionHandler, messageEmitter)
+      var ids = [ 0, 1 ]
+        , sparks = [ createSpark(), createSpark() ]
+        , connectionHandler = createConnectionHandler(logger, createPrimus(ids, sparks))
+        , captainRequestSender =
+            createCaptainRequestSender(connectionHandler, messageEmitter)
 
       captainRequestSender.sendListOrdersRequest('test', function (response) {
         response.success.should.equal(true)
@@ -40,14 +43,25 @@ describe('captain-request-sender', function () {
     })
 
     it('should return a non succesful response when there are no connected captains', function (done) {
-      var captainRequestSender =
-        createCaptainRequestSender(connectionHandler, messageEmitter)
+
+      var connectionHandler = createConnectionHandler(logger, createPrimus())
+        , captainRequestSender =
+            createCaptainRequestSender(connectionHandler, messageEmitter)
 
       captainRequestSender.sendListOrdersRequest('test', function (response) {
         response.success.should.equal(false)
         response.message.should.equal('ERROR: No captains currently connected for: "test"')
         done()
       })
+    })
+
+    it('should throw an error when there is an error retrieving captains', function () {
+      var error = new Error('error')
+        , connectionHandler = createConnectionHandler(logger, createPrimus([], [], error))
+        , captainRequestSender =
+            createCaptainRequestSender(connectionHandler, messageEmitter)
+
+      captainRequestSender.sendListOrdersRequest.should.throw()
     })
 
   })
@@ -68,19 +82,14 @@ describe('captain-request-sender', function () {
       }
     }
 
-    var connectionHandler = false
-      , clientSpark = { send: function (e, d) { console.log('d: ' + d.message) } }
-
-    beforeEach(function () {
-      connectionHandler = createConnectionHandler(logger)
-    })
+    var clientSpark = { send: function (e, d) { console.log('d: ' + d.message) } }
 
     it('should execute an order successfully when all captains return success', function (done) {
       var response = { success: true }
-      connectionHandler.addCaptain('testAppId', 'one', createSpark(response))
-      connectionHandler.addCaptain('testAppId', 'two', createSpark(response))
-
-      var mockClientSpark = sinon.mock(clientSpark)
+        , ids = [ 0, 1 ]
+        , sparks = [ createSpark(response), createSpark(response) ]
+        , connectionHandler = createConnectionHandler(logger, createPrimus(ids, sparks))
+        , mockClientSpark = sinon.mock(clientSpark)
         , captainRequestSender =
             createCaptainRequestSender(connectionHandler, messageEmitter)
         , requestData =
@@ -102,8 +111,10 @@ describe('captain-request-sender', function () {
       )
     })
 
-    function shouldFail(done) {
-      var mockClientSpark = sinon.mock(clientSpark)
+    function shouldFail(sparks, done) {
+      var ids = [ 0, 1 ]
+        , connectionHandler = createConnectionHandler(logger, createPrimus(ids, sparks))
+        , mockClientSpark = sinon.mock(clientSpark)
         , captainRequestSender =
             createCaptainRequestSender(connectionHandler, messageEmitter)
         , requestData =
@@ -127,20 +138,22 @@ describe('captain-request-sender', function () {
 
     it('should fail to execute an order when all captains return false', function (done) {
       var response = { success: false, message: 'Error occured' }
-      connectionHandler.addCaptain('testAppId', 'one', createSpark(response))
-      connectionHandler.addCaptain('testAppId', 'two', createSpark(response))
-      shouldFail(done)
+        , sparks = [ createSpark(response), createSpark(response) ]
+
+      shouldFail(sparks, done)
     })
 
     it('should fail to execute an order when any captain return false', function (done) {
-      var response = { success: false, message: 'Error occured' }
-      connectionHandler.addCaptain('testAppId', 'one', createSpark({ success: true }))
-      connectionHandler.addCaptain('testAppId', 'two', createSpark(response))
-      shouldFail(done)
+      var sparks =
+      [ createSpark({ success: false, message: 'Error occured' })
+      , createSpark({ success: true })
+      ]
+      shouldFail(sparks, done)
     })
 
     it('should fail to execute an order when there are no captains', function (done) {
-      var mockClientSpark = sinon.mock(clientSpark)
+      var connectionHandler = createConnectionHandler(logger, createPrimus())
+        , mockClientSpark = sinon.mock(clientSpark)
         , captainRequestSender =
             createCaptainRequestSender(connectionHandler, messageEmitter)
         , requestData =
