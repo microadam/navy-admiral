@@ -10,7 +10,7 @@ app.unknownOption = function (arg) {
 }
 
 app
-  .version('0.0.1')
+  .version(require('./package.json').version)
   .option('-p, --port [port]', 'Port to listen on [8006]', 8006)
 
 app.parse(process.argv)
