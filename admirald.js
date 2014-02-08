@@ -1,6 +1,12 @@
 #!/usr/bin/env node
-var app = require('commander')
+var serviceLocator = require('service-locator').createServiceLocator()
+  , app = require('commander')
   , createSocketServer = require('./lib/socket-server')
+  , levelup = require('level')
+  , sublevel = require('level-sublevel')
+  , db = sublevel(levelup(process.env.HOME + '/.navy-admiral'))
+
+serviceLocator.register('db', db)
 
 app.unknownOption = function (arg) {
   console.log('')
@@ -15,5 +21,5 @@ app
 
 app.parse(process.argv)
 
-var socketServer = createSocketServer()
+var socketServer = createSocketServer(serviceLocator)
 socketServer.listen(app.port)

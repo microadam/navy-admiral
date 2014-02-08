@@ -28,7 +28,10 @@
     "ws": "~0.4.31",
     "async": "~0.2.9",
     "lodash": "~2.4.1",
-    "primus-rooms": "~2.3.0"
+    "primus-rooms": "~2.3.0",
+    "service-locator": "0.0.2",
+    "level-sublevel": "~5.2.0",
+    "level": "~0.18.0"
   },
   "devDependencies": {
     "jshint": "~2.4.1",
