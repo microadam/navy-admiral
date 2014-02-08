@@ -34,6 +34,10 @@ describe('socket-server', function () {
       handleCaptainEvents = sinon.spy()
       handleClientRequests = sinon.spy()
 
+      function createHandleClientRequests() {
+        return handleClientRequests
+      }
+
       /* jshint camelcase: false */
       createSocketServer.__set__
       ( { primus: primus
@@ -41,7 +45,7 @@ describe('socket-server', function () {
         , logger: { info: noop }
         , connectionHandler: connectionHandler
         , handleCaptainEvents: handleCaptainEvents
-        , handleClientRequests: handleClientRequests
+        , createHandleClientRequests: createHandleClientRequests
         }
       )
       socketServer = createSocketServer()
@@ -65,7 +69,6 @@ describe('socket-server', function () {
       var spark = new Spark()
       socketServer.listen(9000)
       primus.emit('connection', spark)
-      spark.emit('request', { type: 'client' })
       handleClientRequests.calledOnce.should.equal(true)
     })
 
