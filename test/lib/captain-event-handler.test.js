@@ -1,8 +1,7 @@
-var sinon = require('sinon')
-  , createHandleEvents = require('../../lib/captain-event-handler')
+var bootstrap = require('../test-bootstrap')
   , EventEmitter = require('events').EventEmitter
-  , connectionHandler = require('../../lib/connection-handler')()
-  , messageEmitter = require('../../lib/message-emitter')()
+  , sinon = require('sinon')
+  , createCaptainEventHandler = require('../../lib/captain-event-handler')
 
 function Spark() {
   EventEmitter.call(this)
@@ -14,28 +13,35 @@ describe('captain-event-handler', function () {
 
   describe('handleCaptainEvents()', function () {
 
+    var serviceLocator = null
+    beforeEach(function () {
+      bootstrap(function (sl) {
+        serviceLocator = sl
+      })
+    })
+
     it('should listen to the captainRegister event', function () {
       var spark = new Spark()
-        , connectionHandlerStub = sinon.stub(connectionHandler, 'addCaptain')
-        , mockMessageEmitter = sinon.mock(messageEmitter)
-        , handleEvents = createHandleEvents(connectionHandler, messageEmitter)
+        , connectionHandlerStub = sinon.stub(serviceLocator.connectionHandler, 'addCaptain')
+        , mockMessageEmitter = sinon.mock(serviceLocator.messageEmitter)
+        , captainEventHandler = createCaptainEventHandler(serviceLocator)
 
       connectionHandlerStub.callsArgWith(3, null, [])
       mockMessageEmitter.expects('emitMessage').twice()
 
-      handleEvents(spark)
+      captainEventHandler.handleEvents(spark)
       spark.emit('captainRegister', {})
       mockMessageEmitter.verify()
     })
 
     it('should listen to the captainOrderMessage event', function () {
       var spark = new Spark()
-        , mockMessageEmitter = sinon.mock(messageEmitter)
-        , handleEvents = createHandleEvents(connectionHandler, messageEmitter)
+        , mockMessageEmitter = sinon.mock(serviceLocator.messageEmitter)
+        , captainEventHandler = createCaptainEventHandler(serviceLocator)
 
       mockMessageEmitter.expects('emitCaptainMessageToClient').once()
 
-      handleEvents(spark)
+      captainEventHandler.handleEvents(spark)
       spark.emit('captainOrderMessage', {})
       mockMessageEmitter.verify()
     })

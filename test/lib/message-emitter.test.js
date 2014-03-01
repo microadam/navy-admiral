@@ -1,5 +1,5 @@
 var sinon = require('sinon')
-  , createConnectionHandler = require('../../lib/connection-handler')
+  , bootstrap = require('../test-bootstrap')
   , createMessageEmitter = require('../../lib/message-emitter')
 
 function createSpark(sendFn) {
@@ -8,11 +8,17 @@ function createSpark(sendFn) {
 
 describe('message-emitter', function () {
 
+  var serviceLocator = null
+  beforeEach(function () {
+    bootstrap(function (sl) {
+      serviceLocator = sl
+    })
+  })
+
   describe('emitMessage()', function () {
 
     it('should send correct data', function (done) {
-      var connectionHandler = createConnectionHandler()
-        , messageEmitter = createMessageEmitter(connectionHandler)
+      var messageEmitter = createMessageEmitter(serviceLocator)
         , spark = createSpark(function (event, data) {
             event.should.equal('serverMessage')
             Object.keys(data).length.should.equal(1)
@@ -28,9 +34,8 @@ describe('message-emitter', function () {
   describe('emitCaptainMessageToClient()', function () {
 
     it('should send correct data when there is a spark', function (done) {
-      var connectionHandler = createConnectionHandler()
-        , messageEmitter = createMessageEmitter(connectionHandler)
-        , getClientStub = sinon.stub(connectionHandler, 'getClient')
+      var messageEmitter = createMessageEmitter(serviceLocator)
+        , getClientStub = sinon.stub(serviceLocator.connectionHandler, 'getClient')
         , spark = createSpark(function (event, data) {
             event.should.equal('captainMessage')
             Object.keys(data).length.should.equal(2)
@@ -44,8 +49,7 @@ describe('message-emitter', function () {
     })
 
     it('should not send data when there is no spark', function () {
-      var connectionHandler = createConnectionHandler()
-        , messageEmitter = createMessageEmitter(connectionHandler)
+      var messageEmitter = createMessageEmitter(serviceLocator)
         , spark = createSpark(function () {})
         , mockedSpark = sinon.mock(spark)
 

@@ -1,17 +1,6 @@
 var sinon = require('sinon')
-  , rewire = require('rewire')
-  , createSocketServer = rewire('../../lib/socket-server')
+  , bootstrap = require('../test-bootstrap')
   , EventEmitter = require('events').EventEmitter
-  , connectionHandler = require('../../lib/connection-handler')()
-
-function noop () {}
-
-function Primus() {
-  EventEmitter.call(this)
-}
-
-Primus.prototype = Object.create(EventEmitter.prototype)
-Primus.prototype.use = noop
 
 function Spark() {
   EventEmitter.call(this)
@@ -22,63 +11,48 @@ describe('socket-server', function () {
 
   describe('listen()', function () {
 
-    var primus = null
-      , server = null
-      , handleCaptainEvents = null
-      , handleClientRequests = null
-      , socketServer = null
-
+    var serviceLocator = null
     beforeEach(function () {
-      primus = new Primus()
-      server = { listen: noop }
-      handleCaptainEvents = sinon.spy()
-      handleClientRequests = sinon.spy()
-
-      function createHandleClientRequests() {
-        return handleClientRequests
-      }
-
-      /* jshint camelcase: false */
-      createSocketServer.__set__
-      ( { primus: primus
-        , server: server
-        , logger: { info: noop }
-        , connectionHandler: connectionHandler
-        , handleCaptainEvents: handleCaptainEvents
-        , createHandleClientRequests: createHandleClientRequests
-        }
-      )
-      socketServer = createSocketServer()
+      bootstrap(function (sl) {
+        serviceLocator = sl
+      })
     })
 
     it('should listen on the provided port', function () {
-      var mockServer = sinon.mock(server)
+      var mockServer = sinon.mock(serviceLocator.server)
       mockServer.expects('listen').once().withArgs(9000)
-      socketServer.listen(9000)
+      serviceLocator.socketServer.listen(9000)
       mockServer.verify()
     })
 
     it('should handle captain events', function () {
       var spark = new Spark()
-      socketServer.listen(9000)
-      primus.emit('connection', spark)
-      handleCaptainEvents.calledOnce.should.equal(true)
+      serviceLocator.socketServer.listen(9000)
+      serviceLocator.primus.emit('connection', spark)
+      serviceLocator.captainEventHandler.handleEvents.calledOnce.should.equal(true)
     })
 
     it('should handle client requests', function () {
       var spark = new Spark()
-      socketServer.listen(9000)
-      primus.emit('connection', spark)
-      handleClientRequests.calledOnce.should.equal(true)
+      serviceLocator.socketServer.listen(9000)
+      serviceLocator.primus.emit('connection', spark)
+      serviceLocator.clientRequestHandler.handleRequests.calledOnce.should.equal(true)
+    })
+
+    it('should handle requests from Service Manager', function () {
+      var spark = new Spark()
+      serviceLocator.socketServer.listen(9000)
+      serviceLocator.primus.emit('connection', spark)
+      serviceLocator.serviceManager.handleRequests.calledOnce.should.equal(true)
     })
 
     it('should remove connections from connection handler when they disconnect', function () {
       var spark = new Spark()
-        , mockConnectionHandler = sinon.mock(connectionHandler)
+        , mockConnectionHandler = sinon.mock(serviceLocator.connectionHandler)
 
       mockConnectionHandler.expects('removeConnection').once()
-      socketServer.listen(9000)
-      primus.emit('disconnection', spark)
+      serviceLocator.socketServer.listen(9000)
+      serviceLocator.primus.emit('disconnection', spark)
       mockConnectionHandler.verify()
     })
 

@@ -1,8 +1,7 @@
-var sinon = require('sinon')
+var bootstrap = require('../test-bootstrap')
+  , sinon = require('sinon')
   , createCaptainRequestSender = require('../../lib/captain-request-sender')
   , createConnectionHandler = require('../../lib/connection-handler')
-  , messageEmitter = require('../../lib/message-emitter')()
-  , logger = { info: function () {} }
 
 describe('captain-request-sender', function () {
 
@@ -26,12 +25,23 @@ describe('captain-request-sender', function () {
       }
     }
 
+    var serviceLocator = null
+    beforeEach(function () {
+      bootstrap(function (sl) {
+        serviceLocator = sl
+      })
+    })
+
     it('should return a list of captains orders with two captains connected', function (done) {
       var ids = [ 0, 1 ]
         , sparks = [ createSpark(), createSpark() ]
-        , connectionHandler = createConnectionHandler(logger, createPrimus(ids, sparks))
-        , captainRequestSender =
-            createCaptainRequestSender(connectionHandler, messageEmitter)
+
+      serviceLocator.primus = createPrimus(ids, sparks)
+      var connectionHandler = createConnectionHandler(serviceLocator)
+
+      serviceLocator.connectionHandler = connectionHandler
+      var captainRequestSender =
+            createCaptainRequestSender(serviceLocator)
 
       captainRequestSender.sendListOrdersRequest('test', function (response) {
         response.success.should.equal(true)
@@ -43,10 +53,12 @@ describe('captain-request-sender', function () {
     })
 
     it('should return a non succesful response when there are no connected captains', function (done) {
+      serviceLocator.primus = createPrimus()
+      var connectionHandler = createConnectionHandler(serviceLocator)
 
-      var connectionHandler = createConnectionHandler(logger, createPrimus())
-        , captainRequestSender =
-            createCaptainRequestSender(connectionHandler, messageEmitter)
+      serviceLocator.connectionHandler = connectionHandler
+      var captainRequestSender =
+            createCaptainRequestSender(serviceLocator)
 
       captainRequestSender.sendListOrdersRequest('test', function (response) {
         response.success.should.equal(false)
@@ -57,9 +69,13 @@ describe('captain-request-sender', function () {
 
     it('should throw an error when there is an error retrieving captains', function () {
       var error = new Error('error')
-        , connectionHandler = createConnectionHandler(logger, createPrimus([], [], error))
-        , captainRequestSender =
-            createCaptainRequestSender(connectionHandler, messageEmitter)
+
+      serviceLocator.primus = createPrimus([], [], error)
+      var connectionHandler = createConnectionHandler(serviceLocator)
+
+      serviceLocator.connectionHandler = connectionHandler
+      var captainRequestSender =
+            createCaptainRequestSender(connectionHandler, serviceLocator.messageEmitter)
 
       captainRequestSender.sendListOrdersRequest.should.throw()
     })
@@ -83,15 +99,25 @@ describe('captain-request-sender', function () {
     }
 
     var clientSpark = { send: function (e, d) { console.log('d: ' + d.message) } }
+      , serviceLocator = null
+    beforeEach(function () {
+      bootstrap(function (sl) {
+        serviceLocator = sl
+      })
+    })
 
     it('should execute an order successfully when all captains return success', function (done) {
       var response = { success: true }
         , ids = [ 0, 1 ]
         , sparks = [ createSpark(response), createSpark(response) ]
-        , connectionHandler = createConnectionHandler(logger, createPrimus(ids, sparks))
+
+      serviceLocator.primus = createPrimus(ids, sparks)
+      var connectionHandler = createConnectionHandler(serviceLocator)
         , mockClientSpark = sinon.mock(clientSpark)
-        , captainRequestSender =
-            createCaptainRequestSender(connectionHandler, messageEmitter)
+
+      serviceLocator.connectionHandler = connectionHandler
+      var captainRequestSender =
+            createCaptainRequestSender(serviceLocator)
         , requestData =
             { order: 'orderName'
             , appId: 'testAppId'
@@ -113,10 +139,14 @@ describe('captain-request-sender', function () {
 
     function shouldFail(sparks, done) {
       var ids = [ 0, 1 ]
-        , connectionHandler = createConnectionHandler(logger, createPrimus(ids, sparks))
+
+      serviceLocator.primus = createPrimus(ids, sparks)
+      var connectionHandler = createConnectionHandler(serviceLocator)
         , mockClientSpark = sinon.mock(clientSpark)
-        , captainRequestSender =
-            createCaptainRequestSender(connectionHandler, messageEmitter)
+
+      serviceLocator.connectionHandler = connectionHandler
+      var captainRequestSender =
+            createCaptainRequestSender(serviceLocator)
         , requestData =
             { order: 'orderName'
             , appId: 'testAppId'
@@ -152,10 +182,13 @@ describe('captain-request-sender', function () {
     })
 
     it('should fail to execute an order when there are no captains', function (done) {
-      var connectionHandler = createConnectionHandler(logger, createPrimus())
+      serviceLocator.primus = createPrimus()
+      var connectionHandler = createConnectionHandler(serviceLocator)
         , mockClientSpark = sinon.mock(clientSpark)
-        , captainRequestSender =
-            createCaptainRequestSender(connectionHandler, messageEmitter)
+
+      serviceLocator.connectionHandler = connectionHandler
+      var captainRequestSender =
+            createCaptainRequestSender(serviceLocator)
         , requestData =
             { order: 'orderName'
             , appId: 'testAppId'
