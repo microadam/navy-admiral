@@ -46,6 +46,18 @@ describe('captain-event-handler', function () {
       mockMessageEmitter.verify()
     })
 
+    it('should listen to the captainExecuteOrder event', function () {
+      var spark = new Spark()
+        , mockCaptainRequestSender = sinon.mock(serviceLocator.captainRequestSender)
+        , captainEventHandler = createCaptainEventHandler(serviceLocator)
+
+      mockCaptainRequestSender.expects('sendExecuteOrderRequest').once()
+
+      captainEventHandler.handleEvents(spark)
+      spark.emit('captainExecuteOrder', {})
+      mockCaptainRequestSender.verify()
+    })
+
   })
 
 })
