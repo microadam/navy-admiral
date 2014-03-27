@@ -33,7 +33,7 @@ describe('connection-handler', function () {
       var spark = createSpark(1)
         , connectionHandler = createConnectionHandler(serviceLocator)
 
-      connectionHandler.addCaptain('test', 'name', spark, function () {
+      connectionHandler.addCaptain('test', 'testing', 'name', spark, function () {
         // As long as this callback is called, we are happy
         done()
       })
@@ -64,7 +64,7 @@ describe('connection-handler', function () {
       serviceLocator.primus = createPrimus(ids, sparks)
       var connectionHandler = createConnectionHandler(serviceLocator)
 
-      connectionHandler.getCaptains('testAppId', function (error, captains) {
+      connectionHandler.getCaptains('testAppId', 'testing', function (error, captains) {
         captains.length.should.equal(2)
         done()
       })
@@ -77,7 +77,7 @@ describe('connection-handler', function () {
       serviceLocator.primus = createPrimus(ids, sparks)
       var connectionHandler = createConnectionHandler(serviceLocator)
 
-      connectionHandler.getCaptains('testAppId', function (error, captains) {
+      connectionHandler.getCaptains('testAppId', 'testing', function (error, captains) {
         captains.length.should.equal(0)
         done()
       })

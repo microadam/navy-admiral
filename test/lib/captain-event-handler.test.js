@@ -26,11 +26,11 @@ describe('captain-event-handler', function () {
         , mockMessageEmitter = sinon.mock(serviceLocator.messageEmitter)
         , captainEventHandler = createCaptainEventHandler(serviceLocator)
 
-      connectionHandlerStub.callsArgWith(3, null, [])
+      connectionHandlerStub.callsArgWith(4, null, [])
       mockMessageEmitter.expects('emitMessage').twice()
 
       captainEventHandler.handleEvents(spark)
-      spark.emit('captainRegister', {})
+      spark.emit('captainRegister', { applications: { test: [ 'testing' ] } })
       mockMessageEmitter.verify()
     })
 

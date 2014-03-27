@@ -43,7 +43,7 @@ describe('captain-request-sender', function () {
       var captainRequestSender =
             createCaptainRequestSender(serviceLocator)
 
-      captainRequestSender.sendListOrdersRequest('test', function (response) {
+      captainRequestSender.sendListOrdersRequest('test', 'testing', function (response) {
         response.success.should.equal(true)
         response.orders.length.should.equal(2)
         response.orders[0].should.equal('orderOne')
@@ -60,9 +60,9 @@ describe('captain-request-sender', function () {
       var captainRequestSender =
             createCaptainRequestSender(serviceLocator)
 
-      captainRequestSender.sendListOrdersRequest('test', function (response) {
+      captainRequestSender.sendListOrdersRequest('test', 'testing', function (response) {
         response.success.should.equal(false)
-        response.message.should.equal('ERROR: No captains currently connected for: "test"')
+        response.message.should.equal('ERROR: No captains currently connected for: "test testing"')
         done()
       })
     })
@@ -192,6 +192,7 @@ describe('captain-request-sender', function () {
         , requestData =
             { order: 'orderName'
             , appId: 'testAppId'
+            , environment: 'testing'
             }
 
       mockClientSpark.expects('send').never()
@@ -202,7 +203,7 @@ describe('captain-request-sender', function () {
       , clientSpark
       , function (response) {
           response.success.should.equal(false)
-          response.message.should.equal('ERROR: No captains currently connected for: "testAppId"')
+          response.message.should.equal('ERROR: No captains currently connected for: "testAppId testing"')
           mockClientSpark.verify()
           done()
         }
