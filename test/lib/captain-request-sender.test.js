@@ -137,7 +137,7 @@ describe('captain-request-sender', function () {
       )
     })
 
-    function shouldFail(sparks, done) {
+    function shouldFail(sparks, numMessagesEmitted, done) {
       var ids = [ 0, 1 ]
 
       serviceLocator.primus = createPrimus(ids, sparks)
@@ -152,7 +152,7 @@ describe('captain-request-sender', function () {
             , appId: 'testAppId'
             }
 
-      mockClientSpark.expects('send').exactly(4)
+      mockClientSpark.expects('send').exactly(numMessagesEmitted)
 
       captainRequestSender.sendExecuteOrderRequest
       ( requestData
@@ -170,7 +170,7 @@ describe('captain-request-sender', function () {
       var response = { success: false, message: 'Error occured' }
         , sparks = [ createSpark(response), createSpark(response) ]
 
-      shouldFail(sparks, done)
+      shouldFail(sparks, 6, done)
     })
 
     it('should fail to execute an order when any captain return false', function (done) {
@@ -178,7 +178,7 @@ describe('captain-request-sender', function () {
       [ createSpark({ success: false, message: 'Error occured' })
       , createSpark({ success: true })
       ]
-      shouldFail(sparks, done)
+      shouldFail(sparks, 5, done)
     })
 
     it('should fail to execute an order when there are no captains', function (done) {
