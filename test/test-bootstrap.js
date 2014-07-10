@@ -17,6 +17,7 @@ module.exports = function testBootstrap(callback) {
 
   Primus.prototype = Object.create(EventEmitter.prototype)
   Primus.prototype.use = noop
+  Primus.prototype.authorize = noop
 
   var primus = new Primus()
     , serviceLocator = serviceLocatorFactory.createServiceLocator()

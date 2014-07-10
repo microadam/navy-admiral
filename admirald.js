@@ -12,9 +12,15 @@ bootstrap(function (serviceLocator) {
 
   serviceLocator.app
     .version(require('./package.json').version)
-    .option('-p, --port [port]', 'Port to listen on [8006]', 8006)
+    .option('-P, --port [port]', 'Port to listen on [8006]', 8006)
+    .option('-u, --username [username]', 'Username for basic auth', 'none')
+    .option('-p, --password [password]', 'Password for basic auth', 'none')
 
   serviceLocator.app.parse(process.argv)
-  serviceLocator.socketServer.listen(serviceLocator.app.port)
+  var port = serviceLocator.app.port
+    , username = serviceLocator.app.username
+    , password = serviceLocator.app.password
+
+  serviceLocator.socketServer.listen(port, username, password)
 
 })
