@@ -8,6 +8,7 @@ describe('connection-handler', function () {
   function createSpark(id) {
     return {
       id: id
+    , send: function () {}
     , join: function (a, cb) { cb() }
     , room: function () { return { clients: function (cb) { cb() } } }
     }
