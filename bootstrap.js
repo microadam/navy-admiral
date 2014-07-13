@@ -1,5 +1,6 @@
 var serviceLocator = require('service-locator').createServiceLocator()
   , app = require('commander')
+  , EventEmitter = require('events').EventEmitter
   , createSocketServer = require('./lib/socket-server')
   , levelup = require('level')
   , sublevel = require('level-sublevel')
@@ -13,6 +14,7 @@ var serviceLocator = require('service-locator').createServiceLocator()
   , server = require('http').createServer()
   , primus = new Primus(server, { transformer: 'websockets', parser: 'JSON' })
   , serviceManager = require('./lib/service-manager')()
+  , createPluginManager = require('./lib/plugin-manager')
   , createConnectionHandler = require('./lib/connection-handler')
   , createMessageEmitter = require('./lib/message-emitter')
   , createCaptainRequestSender = require('./lib/captain-request-sender')
@@ -38,14 +40,19 @@ module.exports = function bootstrap(callback) {
     , captainRequestSender = createCaptainRequestSender(serviceLocator)
     , clientRequestHandler = createClientRequestHandler(serviceLocator)
     , captainEventHandler = createCaptainEventHandler(serviceLocator)
+    , pluginManager = createPluginManager(serviceLocator)
 
   serviceLocator.register('serviceManager', serviceManager)
+  serviceLocator.register('pluginManager', pluginManager)
   serviceLocator.register('socketServer', socketServer)
   serviceLocator.register('connectionHandler', connectionHandler)
   serviceLocator.register('messageEmitter', messageEmitter)
   serviceLocator.register('captainRequestSender', captainRequestSender)
   serviceLocator.register('clientRequestHandler', clientRequestHandler)
   serviceLocator.register('captainEventHandler', captainEventHandler)
+  serviceLocator.register('messageBus', new EventEmitter())
+
+  pluginManager.load()
 
   callback(serviceLocator)
 }

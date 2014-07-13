@@ -24,6 +24,7 @@
     "basic-auth-parser": "0.0.2",
     "bunyan": "~0.22.1",
     "commander": "~2.1.0",
+    "js-plugins": "0.0.2",
     "level": "~0.18.0",
     "level-sublevel": "~5.2.0",
     "lodash": "~2.4.1",

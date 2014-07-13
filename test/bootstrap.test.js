@@ -11,6 +11,8 @@ describe('bootstrap', function () {
       should.exist(serviceLocator.primus)
       should.exist(serviceLocator.server)
       should.exist(serviceLocator.serviceManager)
+      should.exist(serviceLocator.messageBus)
+      should.exist(serviceLocator.pluginManager)
       should.exist(serviceLocator.socketServer)
       should.exist(serviceLocator.connectionHandler)
       should.exist(serviceLocator.messageEmitter)

@@ -110,7 +110,9 @@ describe('captain-request-sender', function () {
       var response = { success: true }
         , ids = [ 0, 1 ]
         , sparks = [ createSpark(response), createSpark(response) ]
+        , messageBusEmitSpy = sinon.spy()
 
+      serviceLocator.messageBus = { emit: messageBusEmitSpy }
       serviceLocator.primus = createPrimus(ids, sparks)
       var connectionHandler = createConnectionHandler(serviceLocator)
         , mockClientSpark = sinon.mock(clientSpark)
@@ -131,6 +133,7 @@ describe('captain-request-sender', function () {
       , clientSpark
       , function (response) {
           response.success.should.equal(true)
+          messageBusEmitSpy.calledOnce.should.equal(true)
           mockClientSpark.verify()
           done()
         }
